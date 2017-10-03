@@ -1,14 +1,30 @@
-[![Build Status](https://travis-ci.org/JayVora-SerpentCS/OdooHotelManagementSystem.svg?branch=10.0)](https://travis-ci.org/JayVora-SerpentCS/OdooHotelManagementSystem)
+[![Build Status](https://travis-ci.org/OCA/vertical-hotel.svg?branch=10.0)](https://travis-ci.org/OCA/vertical-hotel)
+[![Coverage Status](https://coveralls.io/repos/OCA/vertical-hotel/badge.png?branch=10.0)](https://coveralls.io/r/OCA/vertical-hotel?branch=10.0)
 
-OpenERP/Odoo Hotel Management System
-====================================
+# Vertical Hotel
 
-Serpent Consulting services Pvt. Ltd. provide an efficient OpenERP/ODOO Hotel Management Software which includes front office management systems for all sorts of hotel operations and encompasses a comprehensive line of OpenERP solutions for many other aspects of hotel operations including CRS (Central Reservation System), CRM, Spa Scheduling and Management, POS Hotel Management Software as well as real-time hotel booking engine.
+write me
 
-“Our OpenERP HMS is capable of ensuring constant control over all of the activities and processes of your hotel”
- 
+[//]: # (addons)
 
-Choosing our integrated OpenERP/ODOO Hotel Management Software optimizes your hotel’s costs whilst improving your overall productivity. Furthermore, our OpenERP/Odoo software solutions are equipped with tools that aid you to carry out scrupulous checks any sort of expenses made by the hotel. With this the management can easily detect and eliminate any additional waste cost expenses. We have integrated these solutions seamlessly with our PMS and thus, these are capable of ensuring constant control over all the activities and processes of the hotel. 
+Unported addons
+---------------
+addon | version | summary
+--- | --- | ---
+[board_frontdesk](board_frontdesk/) | 10.0.1.0.0 | Board for Hotel FrontDesk
+[hotel](hotel/) | 10.0.1.0.0 | Hotel Management Base
+[hotel_housekeeping](hotel_housekeeping/) | 10.0.1.0.0 | Hotel Housekeeping Management
+[hotel_reservation](hotel_reservation/) | 10.0.1.0.0 | Hotel Reservation Management
+[hotel_restaurant](hotel_restaurant/) | 10.0.1.0.0 | Hotel Restaurant Management
+[report_hotel_reservation](report_hotel_reservation/) | 10.0.1.0.0 | Hotel Reservation Management - Reporting
+[report_hotel_restaurant](report_hotel_restaurant/) | 10.0.1.0.0 | Restaurant Management - Reporting
 
-Help us do better by donating to us and motivating us : http://www.serpentcs.com/page/donate-to-serpentcs
-Thanks.
+[//]: # (end addons)
+
+----
+
+OCA, or the Odoo Community Association, is a nonprofit organization whose
+mission is to support the collaborative development of Odoo features and
+promote its widespread use.
+
+http://odoo-community.org/
