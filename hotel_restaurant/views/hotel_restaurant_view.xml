@@ -807,7 +807,7 @@
         <field name="res_model">hotel.menucard</field>
         <field name="view_type">form</field>
         <field name="view_mode">tree,form</field>
-        <field name="context">{'search_default_product_id':active_id,'default_product_id':active_id}</field>
+        <field name="context">{'search_default_categ_id':active_id,'default_categ_id':active_id}</field>
     </record>
 
     <!-- Binding Tree Click to Action -->
@@ -822,8 +822,7 @@
         <field name="name">Food Items by Category</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">hotel.menucard.type</field>
-        <field name="domain">[('menu_id', '=', False)]
-        </field>
+        <field name="domain">[]</field>
         <field name="view_type">tree</field>
         <field name="view_id" ref="hotel_food_category_tree_view" />
     </record>

@@ -171,7 +171,7 @@
         name="Activity Types" action="action_hotel_housekeeping_activity_type_view_form"
         parent="menu_hotel_activity" sequence="12" />
 
-    <!-- activity -->
+    <!-- Activity -->
     <!-- Form view of hotel activity -->
     <record id="view_h_activity_form" model="ir.ui.view">
         <field name="name">hotel.activity.form</field>
