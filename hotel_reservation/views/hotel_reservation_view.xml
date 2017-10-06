@@ -52,7 +52,7 @@
                     </group>
                     <notebook>
                         <page string='Reservation Line'>
-                            <field name="reservation_line" colspan="4" nolabel="1">
+                            <field name="reservation_line" colspan="4" nolabel="1" >
                                 <form string="Reservation Line">
                                     <separator string="Room Type" />
                                     <field name="name" invisible="1" />

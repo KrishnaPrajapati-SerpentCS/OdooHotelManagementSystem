@@ -243,7 +243,7 @@
                         icon="fa-check" class="oe_highlight" />
                     <button name="%(report_hotel_reservation_order_bill)d"
                         attrs="{'invisible' : ['|', ('folio_id','!=',False), ('state','in',('draft','order'))]}"
-                        type="action" string="generate Bill" class="oe_highlight" />
+                        type="action" string="Generate Bill" class="oe_highlight" />
                     <field name="state" widget="statusbar" />
                 </header>
                 <sheet>
@@ -371,7 +371,7 @@
                         type="object" icon="fa-file-o" class="oe_highlight" />
                     <button name="%(report_hotel_res_order_bill)d"
                         attrs="{'invisible' : ['|', ('folio_id','!=',False), ('state','in',('draft','order','cancel'))]}"
-                        type="action" string="generate Bill" class="oe_highlight" />
+                        type="action" string="Generate Bill" class="oe_highlight" />
                     <field name="state" widget="statusbar" statusbar_visible="draft,done,cancel" />
                 </header>
                 <sheet>
@@ -418,17 +418,16 @@
                                 <field name="price_subtotal" />
                             </tree>
                         </field>
+                        <newline />
+                        <group colspan="2" class="oe_subtotal_footer oe_right">
+                            <field name="amount_subtotal" widget='monetary' />
+                            <field name="tax" widget='monetary' />
+                            <div class="oe_subtotal_footer_separator oe_inline">
+                                <label for="amount_total" />
+                            </div>
+                            <field name="amount_total" nolabel="1" widget='monetary' />
+                        </group>
                     </group>
-                    <newline />
-                    <group col="2" class="oe_subtotal_footer oe_right">
-                        <field name="amount_subtotal" widget="monetary" />
-                        <field name="tax" widget='monetary' />
-                        <div class="oe_subtotal_footer_separator oe_inline">
-                            <label for="amount_total" />
-                        </div>
-                        <field name="amount_total" nolabel="1" widget='monetary' />
-                    </group>
-                    <div class="oe_clear" />
                 </sheet>
             </form>
         </field>
@@ -584,8 +583,8 @@
         action="open_view_hotel_restaurant_kitchen_order_tickets_form_tree"
         sequence="12" parent="hotel_restaurant_menu" />
 
-    <!-- ======= Menucard Category ======= -->
-    <!-- Form view of hotel menucard type -->
+    <!-- ======= Food Item Category ======= -->
+    <!-- Form view of hotel menu card type -->
     <record id="view_hotel_menucard_type_form" model="ir.ui.view">
         <field name="name">hotel_menucard_type_form</field>
         <field name="model">hotel.menucard.type</field>
@@ -602,7 +601,7 @@
         </field>
     </record>
 
-    <!-- Tree view of hotel menucard type -->
+    <!-- Tree view of hotel menu card type -->
     <record id="view_hotel_menucard_type_list" model="ir.ui.view">
         <field name="name">hotel_menucard_type_list</field>
         <field name="model">hotel.menucard.type</field>
@@ -613,7 +612,7 @@
         </field>
     </record>
 
-    <!-- Action of hotel menucard type -->
+    <!-- Action of hotel menu card type -->
     <record id="action_hotel_menucard_type_view_form" model="ir.actions.act_window">
         <field name="name">Food Item Type</field>
         <field name="res_model">hotel.menucard.type</field>
@@ -627,7 +626,7 @@
         action="action_hotel_menucard_type_view_form" parent="menu_hotel_food_item"
         sequence="12" />
 
-    <!-- Form view of hotel menucard -->
+    <!-- Form view of hotel menu card -->
     <record model="ir.ui.view" id="view_hotel_menucard_form">
         <field name="name">hotel.menucard.form</field>
         <field name="model">hotel.menucard</field>
@@ -691,7 +690,7 @@
         </field>
     </record>
 
-    <!-- Tree view of hotel menucard -->
+    <!-- Tree view of hotel menu card -->
     <record id="view_hotel_menucard_tree" model="ir.ui.view">
         <field name="name">hotel.menucard.tree</field>
         <field name="model">hotel.menucard</field>
@@ -704,7 +703,7 @@
         </field>
     </record>
 
-    <!-- Search view of hotel menucard -->
+    <!-- Search view of hotel menu card -->
     <record id="view_hotel_menucard_search_new" model="ir.ui.view">
         <field name="name">hotel.menucard.search</field>
         <field name="model">hotel.menucard</field>
@@ -721,7 +720,7 @@
         </field>
     </record>
 
-    <!-- Kanban view of hotel menucard -->
+    <!-- Kanban view of hotel menu card -->
     <record id="hotel_manucard_kanban_view" model="ir.ui.view">
         <field name="name">Menucard Kanban</field>
         <field name="model">hotel.menucard</field>
@@ -768,7 +767,7 @@
         </field>
     </record>
 
-    <!-- Action of hotel menucard -->
+    <!-- Action of hotel menu card -->
     <record id="action_hotel_menucard_form" model="ir.actions.act_window">
         <field name="name">Food Item</field>
         <field name="res_model">hotel.menucard</field>

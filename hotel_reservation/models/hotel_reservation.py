@@ -169,7 +169,8 @@ class HotelReservation(models.Model):
                                        'Reservation Line',
                                        help='Hotel room reservation details.',
                                        readonly=True,
-                                       states={'draft': [('readonly', False)]})
+                                       states={'draft': [('readonly', False)]},
+                                       )
     state = fields.Selection([('draft', 'Draft'), ('confirm', 'Confirm'),
                               ('cancel', 'Cancel'), ('done', 'Done')],
                              'State', readonly=True,
@@ -191,6 +192,12 @@ class HotelReservation(models.Model):
                 state.') % (reserv_rec.state))
         return super(HotelReservation, self).unlink()
 
+    @api.multi
+    def copy(self):
+        ctx = dict(self._context) or {}
+        ctx.update({'duplicate': True})
+        return super(HotelReservation, self.with_context(ctx)).copy()
+
     @api.constrains('reservation_line', 'adults', 'children')
     def check_reservation_rooms(self):
         '''
@@ -199,6 +206,7 @@ class HotelReservation(models.Model):
         @param self: object pointer
         @return: raise a warning depending on the validation
         '''
+        ctx = dict(self._context) or {}
         for reservation in self:
             cap = 0
             for rec in reservation.reservation_line:
@@ -207,26 +215,27 @@ class HotelReservation(models.Model):
                     For Reservation.'))
                 for room in rec.reserve:
                     cap += room.capacity
-            if (reservation.adults + reservation.children) > cap:
-                raise ValidationError(_('Room Capacity Exceeded \n Please \
-                                        Select Rooms According to Members \
-                                        Accomodation.'))
+            if not ctx.get('duplicate'):
+                if (reservation.adults + reservation.children) > cap:
+                    raise ValidationError(_('Room Capacity Exceeded \n Please \
+                                         Select Rooms According to Members \
+                                         Accomodation.'))
             if reservation.adults <= 0:
                 raise ValidationError(_('Adults must be more than 0'))
 
     @api.constrains('checkin', 'checkout')
     def check_in_out_dates(self):
         """
-        When date_order is less then checkin date or
-        Checkout date should be greater than the checkin date.
+        When date_order is less then check-in date or
+        Checkout date should be greater than the check-in date.
         """
         if self.checkout and self.checkin:
             if self.checkin < self.date_order:
-                raise except_orm(_('Warning'), _('Checkin date should be \
-                greater than the current date.'))
+                raise ValidationError(_('Check-in date should be greater than \
+                                         the current date.'))
             if self.checkout < self.checkin:
-                raise except_orm(_('Warning'), _('Checkout date \
-                should be greater than Checkin date.'))
+                raise ValidationError(_('Check-out date should be greater than \
+                                         Check-in date.'))
 
     @api.model
     def _needaction_count(self, domain=None):
@@ -291,7 +300,8 @@ class HotelReservation(models.Model):
                 for room_id in line_id.reserve:
                     if room_id.room_reservation_line_ids:
                         for reserv in room_id.room_reservation_line_ids.\
-                                search([('status', '=', 'confirm')]):
+                                search([('status', '=', 'confirm'),
+                                        ('room_id', '=', room_id.id)]):
                             reserv_checkin = datetime.\
                                 strptime(reservation.checkin, dt)
                             reserv_checkout = datetime.\
@@ -316,68 +326,26 @@ class HotelReservation(models.Model):
                                                         '%s') % overlap_dates)
                             else:
                                 self.state = 'confirm'
-                                for room_id in line_id.reserve:
-                                    vals = {'room_id': room_id.id,
-                                            'check_in': reservation.checkin,
-                                            'check_out': reservation.checkout,
-                                            'state': 'assigned',
-                                            'reservation_id': reservation.id,
-                                            }
-                                    room_id.write({'isroom': False,
-                                                   'status': 'occupied'})
-                                    reservation_line_obj.create(vals)
+                                vals = {'room_id': room_id.id,
+                                        'check_in': reservation.checkin,
+                                        'check_out': reservation.checkout,
+                                        'state': 'assigned',
+                                        'reservation_id': reservation.id,
+                                        }
+                                room_id.write({'isroom': False,
+                                               'status': 'occupied'})
+                                reservation_line_obj.create(vals)
                     else:
                         self.state = 'confirm'
-                        for room_id in line_id.reserve:
-                            vals = {'room_id': room_id.id,
-                                    'check_in': reservation.checkin,
-                                    'check_out': reservation.checkout,
-                                    'state': 'assigned',
-                                    'reservation_id': reservation.id,
-                                    }
-                            room_id.write({'isroom': False,
-                                           'status': 'occupied'})
-                            reservation_line_obj.create(vals)
-#             self._cr.execute("select count(*) from hotel_reservation as hr "
-#                              "inner join hotel_reservation_line as hrl on \
-#                              hrl.line_id = hr.id "
-#                              "inner join hotel_reservation_line_room_rel as \
-#                              hrlrr on hrlrr.room_id = hrl.id "
-#                              "where (checkin,checkout) overlaps \
-#                              ( timestamp %s, timestamp %s ) "
-#                              "and hr.id <> cast(%s as integer) "
-#                              "and hr.state = 'confirm' "
-#                              "and hrlrr.hotel_reservation_line_id in ("
-#                              "select hrlrr.hotel_reservation_line_id \
-#                              from hotel_reservation as hr "
-#                              "inner join hotel_reservation_line as \
-#                              hrl on hrl.line_id = hr.id "
-#                              "inner join hotel_reservation_line_room_rel \
-#                              as hrlrr on hrlrr.room_id = hrl.id "
-#                              "where hr.id = cast(%s as integer) )",
-#                              (reservation.checkin, reservation.checkout,
-#                               str(reservation.id), str(reservation.id)))
-#             res = self._cr.fetchone()
-#             roomcount = res and res[0] or 0.0
-#             if roomcount:
-#                 raise ValidationError(_('You tried to confirm reservation \
-#                 with room those already reserved in this reservation \
-#                     period'))
-#             else:
-#                 self.state = 'confirm'
-#                 for line_id in reservation.reservation_line:
-#                     line_id = line_id.reserve
-#                     for room_id in line_id:
-#                         vals = {
-#                             'room_id': room_id.id,
-#                             'check_in': reservation.checkin,
-#                             'check_out': reservation.checkout,
-#                             'state': 'assigned',
-#                             'reservation_id': reservation.id,
-#                             }
-#                         room_id.write({'isroom': False,
-#                                          'status': 'occupied'})
-#                         reservation_line_obj.create(vals)
+                        vals = {'room_id': room_id.id,
+                                'check_in': reservation.checkin,
+                                'check_out': reservation.checkout,
+                                'state': 'assigned',
+                                'reservation_id': reservation.id,
+                                }
+                        room_id.write({'isroom': False,
+                                       'status': 'occupied'})
+                        reservation_line_obj.create(vals)
         return True
 
     @api.multi
@@ -418,7 +386,7 @@ class HotelReservation(models.Model):
         try:
             template_id = (ir_model_data.get_object_reference
                            ('hotel_reservation',
-                            'email_template_hotel_reservation')[1])
+                            'mail_template_hotel_reservation')[1])
         except ValueError:
             template_id = False
         try:
@@ -548,10 +516,8 @@ class HotelReservation(models.Model):
         """
         if not vals:
             vals = {}
-        if self._context is None:
-            self._context = {}
-        vals['reservation_no'] = self.env['ir.sequence'
-                                          ].get('hotel.reservation')
+        vals['reservation_no'] = self.env['ir.sequence'].\
+            get('hotel.reservation')
         return super(HotelReservation, self).create(vals)
 
 
