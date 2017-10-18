@@ -17,6 +17,7 @@
                                 </span>
                             </h2>
                         </div>
+                        <br/><br/>
                         <table class="table table-condensed">
                             <thead>
                                 <tr>
@@ -49,6 +50,7 @@
                                 </td>
                             </tbody>
                         </table>
+                        <br/>
                         <table class="table table-condensed">
                             <thead>
                                 <tr>

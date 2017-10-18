@@ -80,7 +80,7 @@ class HotelFolioLineExt(models.Model):
         Overrides orm write method.
         @param self: The object pointer
         @param vals: dictionary of fields value.
-        update Hotel Room Reservation line history"""
+        Update Hotel Room Reservation line history"""
         reservation_line_obj = self.env['hotel.room.reservation.line']
         room_obj = self.env['hotel.room']
         prod_id = vals.get('product_id') or self.product_id.id
@@ -218,8 +218,8 @@ class HotelReservation(models.Model):
             if not ctx.get('duplicate'):
                 if (reservation.adults + reservation.children) > cap:
                     raise ValidationError(_('Room Capacity Exceeded \n Please \
-                                         Select Rooms According to Members \
-                                         Accomodation.'))
+                                            Select Rooms According to Members \
+                                            Accomodation.'))
             if reservation.adults <= 0:
                 raise ValidationError(_('Adults must be more than 0'))
 
@@ -281,44 +281,78 @@ class HotelReservation(models.Model):
             self.partner_shipping_id = addr['delivery']
             self.pricelist_id = self.partner_id.property_product_pricelist.id
 
+    @api.model
+    def create(self, vals):
+        """
+        Overrides orm create method.
+        @param self: The object pointer
+        @param vals: dictionary of fields value.
+        """
+        if not vals:
+            vals = {}
+        vals['reservation_no'] = self.env['ir.sequence'].\
+            get('hotel.reservation')
+        return super(HotelReservation, self).create(vals)
+
     @api.multi
     def check_overlap(self, date1, date2):
+        date2 = datetime.strptime(date2, '%Y-%m-%d')
+        date1 = datetime.strptime(date1, '%Y-%m-%d')
         delta = date2 - date1
         return set([date1 + timedelta(days=i) for i in range(delta.days + 1)])
 
     @api.multi
     def confirmed_reservation(self):
         """
-        This method create a new recordset for hotel room reservation line
-        ------------------------------------------------------------------
+        This method create a new record set for hotel room reservation line
+        -------------------------------------------------------------------
         @param self: The object pointer
         @return: new record set for hotel room reservation line.
         """
         reservation_line_obj = self.env['hotel.room.reservation.line']
+        vals = {}
         for reservation in self:
+            reserv_checkin = datetime.strptime(reservation.checkin, dt)
+            reserv_checkout = datetime.strptime(reservation.checkout, dt)
+            room_bool = False
             for line_id in reservation.reservation_line:
                 for room_id in line_id.reserve:
                     if room_id.room_reservation_line_ids:
                         for reserv in room_id.room_reservation_line_ids.\
-                                search([('status', '=', 'confirm'),
+                                search([('status', 'in', ('confirm', 'done')),
                                         ('room_id', '=', room_id.id)]):
-                            reserv_checkin = datetime.\
-                                strptime(reservation.checkin, dt)
-                            reserv_checkout = datetime.\
-                                strptime(reservation.checkout, dt)
                             check_in = datetime.strptime(reserv.check_in, dt)
                             check_out = datetime.strptime(reserv.check_out, dt)
-                            range1 = [reserv_checkin, reserv_checkout]
-                            range2 = [check_in, check_out]
+                            if check_in <= reserv_checkin <= check_out:
+                                room_bool = True
+                            if check_in <= reserv_checkout <= check_out:
+                                room_bool = True
+                            if reserv_checkin <= check_in and \
+                                    reserv_checkout >= check_out:
+                                room_bool = True
+                            mytime = "%Y-%m-%d"
+                            r_checkin = datetime.strptime(reservation.checkin,
+                                                          dt).date()
+                            r_checkin = r_checkin.strftime(mytime)
+                            r_checkout = datetime.\
+                                strptime(reservation.checkout, dt).date()
+                            r_checkout = r_checkout.strftime(mytime)
+                            check_intm = datetime.strptime(reserv.check_in,
+                                                           dt).date()
+                            check_outtm = datetime.strptime(reserv.check_out,
+                                                            dt).date()
+                            check_intm = check_intm.strftime(mytime)
+                            check_outtm = check_outtm.strftime(mytime)
+                            range1 = [r_checkin, r_checkout]
+                            range2 = [check_intm, check_outtm]
                             overlap_dates = self.check_overlap(*range1) \
                                 & self.check_overlap(*range2)
-                            if overlap_dates:
-                                overlap_dates = [datetime.
-                                                 strftime(dates,
-                                                          '%d/%m/%Y') for
-                                                 dates in overlap_dates]
+                            overlap_dates = [datetime.strftime(dates,
+                                                               '%d/%m/%Y') for
+                                             dates in overlap_dates]
+                            if room_bool:
                                 raise ValidationError(_('You tried to Confirm '
-                                                        'reservation with room'
+                                                        'Reservation with room'
                                                         ' those already '
                                                         'reserved in this '
                                                         'Reservation Period. '
@@ -334,7 +368,16 @@ class HotelReservation(models.Model):
                                         }
                                 room_id.write({'isroom': False,
                                                'status': 'occupied'})
-                                reservation_line_obj.create(vals)
+                        else:
+                            self.state = 'confirm'
+                            vals = {'room_id': room_id.id,
+                                    'check_in': reservation.checkin,
+                                    'check_out': reservation.checkout,
+                                    'state': 'assigned',
+                                    'reservation_id': reservation.id,
+                                    }
+                            room_id.write({'isroom': False,
+                                           'status': 'occupied'})
                     else:
                         self.state = 'confirm'
                         vals = {'room_id': room_id.id,
@@ -345,13 +388,13 @@ class HotelReservation(models.Model):
                                 }
                         room_id.write({'isroom': False,
                                        'status': 'occupied'})
-                        reservation_line_obj.create(vals)
+                    reservation_line_obj.create(vals)
         return True
 
     @api.multi
     def cancel_reservation(self):
         """
-        This method cancel recordset for hotel room reservation line
+        This method cancel record set for hotel room reservation line
         ------------------------------------------------------------------
         @param self: The object pointer
         @return: cancel record set for hotel room reservation line.
@@ -362,6 +405,7 @@ class HotelReservation(models.Model):
         room_reservation_line = room_res_line_obj.search([('reservation_id',
                                                            'in', self.ids)])
         room_reservation_line.write({'state': 'unassigned'})
+        room_reservation_line.unlink()
         reservation_lines = hotel_res_line_obj.search([('line_id',
                                                         'in', self.ids)])
         for reservation_line in reservation_lines:
@@ -506,19 +550,6 @@ class HotelReservation(models.Model):
                     duration -= 1
         value.update({'duration': duration})
         return value
-
-    @api.model
-    def create(self, vals):
-        """
-        Overrides orm create method.
-        @param self: The object pointer
-        @param vals: dictionary of fields value.
-        """
-        if not vals:
-            vals = {}
-        vals['reservation_no'] = self.env['ir.sequence'].\
-            get('hotel.reservation')
-        return super(HotelReservation, self).create(vals)
 
 
 class HotelReservationLine(models.Model):
